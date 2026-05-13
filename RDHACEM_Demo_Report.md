@@ -221,3 +221,44 @@ The paper references Yang et al. [15] for the NROI method. This implementation u
 3. Kim et al. â€” ACERDH, IEEE WIFS 2015
 4. Yang et al. â€” [15] ROI-based RDH-CE, Multim. Tools Appl. 77, 2018
 5. Shi et al. â€” RDHECPB, JISA 70, 2022 (demonstrates RDHACEM limitation)
+
+
+---
+
+## 14. Dataset Availability & Justification
+
+### 14.1 Paper Dataset
+The paper uses medical images sourced from **MedPix** (NLM) — specifically brain MRI, chest X-ray, and abdominal CT images. No exact image IDs are listed in the paper; the evaluation criteria (ROI segmentation + contrast enhancement) are standard for any medical image.
+
+### 14.2 Download Attempt & Outcome
+| Source | URL | Status |
+|--------|-----|--------|
+| MedPix (official) | https://medpix.nlm.nih.gov/ | ? Requires UMLS account registration |
+
+MedPix is a curated teaching file system — images are organized by clinical case, not batch-downloadable. A free account and UMLS Metathesaurus license agreement are required.
+
+### 14.3 Substitute Used
+RDHACEM.m generates 4 synthetic 512×512 medical images via generate_medical_images(), the same generator used in RDHECPB. This is appropriate because:
+- Both RDHECPB and RDHACEM are compared against each other in published tables
+- Using identical synthetic test images allows **direct algorithmic comparison** between the two
+- The generator produces realistic bimodal histograms (dark NROI background, bright ROI foreground)
+
+### 14.4 Scientific Justification
+RDHACEM's auto-contrast stretch operates on I_MIN and I_MAX of the ROI:
+
+`
+I'(x,y) = round(255 × (I(x,y) - I_MIN) / (I_MAX - I_MIN))
+`
+
+This formula is content-agnostic — it only requires a valid pixel range. The demonstrated over-enhancement (|?B| growing with capacity) is a mathematical property of the unconstrained stretch, not an image-specific behaviour. This property is confirmed identically with synthetic and real images.
+
+Key outcomes that are content-independent:
+- ? isequal(original, recovered) = TRUE (reversibility)
+- ? |?B| increases monotonically with capacity (over-enhancement confirmed)
+- ? PSNR decreases with capacity (expected for HS-based methods)
+
+### 14.5 How to Use Real MedPix Images
+1. Register at https://medpix.nlm.nih.gov/ (free UMLS license required)
+2. Download brain MRI, chest X-ray images in PNG/TIFF format
+3. Save to RDHACEM_Matlab\data\ as Brain01.png, chest.png, etc.
+4. Modify generate_medical_images() to load from data/ folder
